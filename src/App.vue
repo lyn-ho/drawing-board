@@ -16,7 +16,7 @@
         font-awesome-icon.tool-item(@click='handleUndo' title='Undo' icon='undo')
         font-awesome-icon.tool-item(@click='handleRedo' title='Redo' icon='redo')
     .pen-detail(v-show='showPenDetail')
-      i.closeBtn
+      font-awesome-icon.closeBtn(icon='times-circle' @click='showPenDetail = false')
       p Brush Size
       span.circle-box
         i#thickness(:style='[{ transform: `scale(${halfWidth})` }, { backgroundColor: activeColor }]')
@@ -28,8 +28,8 @@
           :style='{ backgroundColor: penColor }'
           @click='changePenColor(penColor)')
       p Opacity
-      i.showOpacity
-      input(type='range' min='1' max='10' value='1')
+      i.showOpacity(:style='{ opacity: strokeOpacity }')
+      input(type='range' min='1' max='10' value='1' v-model='rawOpacity')
 </template>
 
 <script>
@@ -40,11 +40,13 @@ export default {
 
       penColors: ['#000000', '#FF3333', '#99CC00', '#0066FF', '#FFFF33', '#33CC66'],
 
+      halfWidth: 1,
+      rawOpacity: 1,
+
       eraserEnable: false,
       painting: false,
       radius: 5,
       activeColor: '#000000',
-      halfWidth: 1,
 
       activeBgColor: '#fff',
 
@@ -55,6 +57,10 @@ export default {
   computed: {
     strokeWidth() {
       return 2 * this.halfWidth
+    },
+
+    strokeOpacity() {
+      return (11 - this.rawOpacity) / 10
     }
   },
 
@@ -175,6 +181,7 @@ export default {
       context.beginPath()
 
       context.lineWidth = this.strokeWidth
+      context.globalAlpha = this.strokeOpacity
 
       context.lineCap = 'round'
 

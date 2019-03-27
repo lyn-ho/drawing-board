@@ -7,13 +7,14 @@ import {
   faEraser,
   faTrash,
   faUndo,
-  faRedo
+  faRedo,
+  faTimesCircle
 } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 
 import App from './App'
 
-library.add(faDownload, faPaintBrush, faEraser, faTrash, faUndo, faRedo)
+library.add(faDownload, faPaintBrush, faEraser, faTrash, faUndo, faRedo, faTimesCircle)
 
 Vue.component('font-awesome-icon', FontAwesomeIcon)
 
