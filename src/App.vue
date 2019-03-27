@@ -9,13 +9,13 @@
       @mouseup='handleMouseUp')
     .tools
       .container
-        font-awesome-icon.tool-item.save(@click='handleSave' title='Save' icon='download')
-        font-awesome-icon.tool-item.brush(@click='handleBrush' title='Brush' icon='paint-brush')
-        font-awesome-icon.tool-item.eraser(@click='handleEraser' title='Eraser' icon='eraser')
-        font-awesome-icon.tool-item.clear(@click='handleClear' title='Clear' icon='trash')
-        font-awesome-icon.tool-item.undo(@click='handleUndo' title='Undo' icon='undo')
-        font-awesome-icon.tool-item.redo(@click='handleRedo' title='Redo' icon='redo')
-    .pen-detail
+        font-awesome-icon.tool-item(@click='handleSave' title='Save' icon='download')
+        font-awesome-icon.tool-item(@click='activeBrush' :class='{ "tool-active": !eraserEnable }' title='Brush' icon='paint-brush')
+        font-awesome-icon.tool-item(@click='activeEraser' :class='{ "tool-active": eraserEnable }' title='Eraser' icon='eraser')
+        font-awesome-icon.tool-item(@click='handleClear' title='Clear' icon='trash')
+        font-awesome-icon.tool-item(@click='handleUndo' title='Undo' icon='undo')
+        font-awesome-icon.tool-item(@click='handleRedo' title='Redo' icon='redo')
+    .pen-detail(v-show='showPenDetail')
       i.closeBtn
       p Brush Size
       span.circle-box
@@ -23,12 +23,10 @@
       input(type='range' min='1' max='10' value='1')
       p Brush Color
       ul.pen-color.clearfix
-        li.color-item.color-000.active
-        li.color-item.color-f33
-        li.color-item.color-9c0
-        li.color-item.color-06f
-        li.color-item.color-ff3
-        li.color-item.color-3c6
+        li.color-item(v-for='penColor of penColors' 
+          :class='{ "color-active": penColor === activeColor }' 
+          :style='{ backgroundColor: penColor }'
+          @click='changePenColor(penColor)')
       p Opacity
       i.showOpacity
       input(type='range' min='1' max='10' value='1')
@@ -38,13 +36,15 @@
 export default {
   data() {
     return {
+      showPenDetail: false,
+
+      penColors: ['#000000', '#FF3333', '#99CC00', '#0066FF', '#FFFF33', '#33CC66'],
+
       eraserEnable: false,
-
       painting: false,
-
       radius: 5,
-
       lWidth: 2,
+      activeColor: '#000000',
 
       activeBgColor: '#fff',
 
@@ -176,13 +176,27 @@ export default {
       context.closePath()
     },
 
-    handleSave() {},
+    changePenColor(color) {
+      this.activeColor = color
 
-    handleBrush() {
-      this.eraserEnable = false
+      this.showPenDetail = false
+
+      const context = this.getCanvasContext()
+      if(context) {
+        context.fillStyle = color
+        context.strokeStyle = color
+      }
     },
 
-    handleEraser() {
+    handleSave() {},
+
+    activeBrush() {
+      this.eraserEnable = false
+
+      this.showPenDetail = true
+    },
+
+    activeEraser() {
       this.eraserEnable = true
     },
 
@@ -295,24 +309,6 @@ li {
         cursor: pointer;
         border: 2px solid transparent;
 
-        &.save {
-        }
-
-        &.brush {
-        }
-
-        &.eraser {
-        }
-
-        &.clear {
-        }
-
-        &.undo {
-        }
-
-        &.redo {
-        }
-
         &.active {
           border-radius: 5px;
           border-color: #1398e6;
@@ -322,7 +318,6 @@ li {
   }
 
   .pen-detail {
-    display: none;
     position: fixed;
     left: 50%;
     margin-left: -140px;
@@ -398,28 +393,26 @@ li {
 
     .pen-color {
       .color-item {
-        &.color-000 {
-          background-color: #000;
-        }
+        position: relative;
+        float: left;
+        list-style: none;
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        margin: 4px;
+        cursor: pointer;
 
-        &.color-f33 {
-          background-color: #f33;
-        }
-
-        &.color-9c0 {
-          background-color: #9c0;
-        }
-
-        &.color-06f {
-          background-color: #06f;
-        }
-
-        &.color-ff3 {
-          background-color: #ff3;
-        }
-
-        &.color-3c6 {
-          background-color: #3c6;
+        &.color-active::before {
+          position: absolute;
+          left: 3px;
+          top: 3px;
+          content: '';
+          display: block;
+          width: 24px;
+          height: 24px;
+          background: transparent;
+          border: 2px solid #fff;
+          border-radius: 50%;
         }
       }
     }
