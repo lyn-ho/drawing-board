@@ -42,6 +42,12 @@ export default {
 
       painting: false,
 
+      radius: 5,
+
+      lWidth: 2,
+
+      activeBgColor: '#fff',
+
       lastPoint: {}
     };
   },
@@ -60,18 +66,28 @@ export default {
     },
 
     handleMouseDown(e) {
-      console.log('mouse down')
+      let context = this.getCanvasContext()
+
+      if(!context) return
+
+      let canvas = this.getCanvas()
       this.painting = true
 
       let x1 = e.clientX
       let y1 = e.clientY
 
       if(this.eraserEnable) {
-        let context = this.getCanvasContext()
-        if(context) {
-          context.save()
-          // TODO
-        }
+        context.save()
+        
+        context.globalCompositeOperation = 'destination-out'
+        context.beginPath()
+
+        this.radius = Math.max(this.lWidth / 2, 5)
+        
+        context.arc(x1, y1, this.radius, 0, 2 * Math.PI)
+        context.clip()
+        context.clearRect(0, 0, canvas.width, canvas.height)
+        context.restore()
       }
 
       this.lastPoint = {x: x1, y: y1}
@@ -87,20 +103,59 @@ export default {
       let y2 = e.clientY
 
       if(this.eraserEnable) {
-        // TODO
+        this.doEraser(x1, y1, x2, y2)
       } else {
         this.drawLine(x1, y1, x2, y2)
-        this.lastPoint = {x: x2, y: y2}
       }
+
+      this.lastPoint = {x: x2, y: y2}
     },
 
     handleMouseUp() {
-      console.log('mouse up')
       this.painting = false
     },
 
-    moveHandler(x1, y1, x2, y2) {
+    doEraser(x1, y1, x2, y2) {
+      let context = this.getCanvasContext()
+      if(!context) return
 
+      let canvas = this.getCanvas()
+
+      let asin = this.radius * Math.sin(Math.atan((y2 - y1) / (x2 - x1)))
+      let acos = this.radius * Math.cos(Math.atan((y2 - y1) / (x2 - x1)))
+
+      let x3 = x1 + asin
+      let y3 = y1 - acos
+
+      let x4 = x1 - asin
+      let y4 = y1 + acos
+
+      let x5 = x2 + asin
+      let y5 = y2 - acos
+
+      let x6 = x2 - asin
+      let y6 = y2 + acos
+
+      context.save()
+      context.beginPath()
+      context.globalCompositeOperation = 'destination-out'
+      this.radius = Math.max(this.lWidth / 2, 5)
+      context.arc(x2, y2, this.radius, 0, 2 * Math.PI)
+      context.clip()
+      context.clearRect(0, 0, canvas.width, canvas.height)
+      context.restore()
+
+      context.save()
+      context.beginPath()
+      context.globalCompositeOperation = 'destination-out'
+      context.moveTo(x3, y3)
+      context.lineTo(x5, y5)
+      context.lineTo(x6, y6)
+      context.lineTo(x4, y4)
+      context.closePath()
+      context.clip()
+      context.clearRect(0, 0, canvas.width, canvas.height)
+      context.restore()
     },
 
     drawLine(x1, y1, x2, y2) {
@@ -123,9 +178,13 @@ export default {
 
     handleSave() {},
 
-    handleBrush() {},
+    handleBrush() {
+      this.eraserEnable = false
+    },
 
-    handleEraser() {},
+    handleEraser() {
+      this.eraserEnable = true
+    },
 
     handleClear() {
       let canvas = this.getCanvas()
