@@ -205,7 +205,23 @@ export default {
       }
     },
 
-    handleSave() {},
+    handleSave() {
+      const canvas = this.getCanvas()
+
+      if(canvas) {
+        const image = canvas.toDataURL('img/png').replace('image/png', 'image/octet-stream')
+        
+        const link = document.createElement('a')
+        document.body.appendChild(link)
+
+        link.href= image
+        link.download = `pic-${Date.now()}.png`
+        link.target = '_blank'
+        link.click()
+        
+        document.body.removeChild(link)
+      }
+    },
 
     activeBrush() {
       this.eraserEnable = false
