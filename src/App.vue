@@ -19,8 +19,8 @@
       i.closeBtn
       p Brush Size
       span.circle-box
-        i#thickness
-      input(type='range' min='1' max='10' value='1')
+        i#thickness(:style='[{ transform: `scale(${halfWidth})` }, { backgroundColor: activeColor }]')
+      input(type='range' min='1' max='10' value='1' v-model='halfWidth')
       p Brush Color
       ul.pen-color.clearfix
         li.color-item(v-for='penColor of penColors' 
@@ -43,13 +43,23 @@ export default {
       eraserEnable: false,
       painting: false,
       radius: 5,
-      lWidth: 2,
       activeColor: '#000000',
+      halfWidth: 1,
 
       activeBgColor: '#fff',
 
       lastPoint: {}
     };
+  },
+
+  computed: {
+    strokeWidth() {
+      return 2 * this.halfWidth
+    }
+  },
+
+  watch: {
+    
   },
 
   methods: {
@@ -82,7 +92,7 @@ export default {
         context.globalCompositeOperation = 'destination-out'
         context.beginPath()
 
-        this.radius = Math.max(this.lWidth / 2, 5)
+        this.radius = Math.max(this.strokeWidth / 2, 5)
         
         context.arc(x1, y1, this.radius, 0, 2 * Math.PI)
         context.clip()
@@ -139,7 +149,7 @@ export default {
       context.save()
       context.beginPath()
       context.globalCompositeOperation = 'destination-out'
-      this.radius = Math.max(this.lWidth / 2, 5)
+      this.radius = Math.max(this.strokeWidth / 2, 5)
       context.arc(x2, y2, this.radius, 0, 2 * Math.PI)
       context.clip()
       context.clearRect(0, 0, canvas.width, canvas.height)
@@ -164,7 +174,7 @@ export default {
 
       context.beginPath()
 
-      context.lineWidth = 2
+      context.lineWidth = this.strokeWidth
 
       context.lineCap = 'round'
 
@@ -352,9 +362,10 @@ li {
         -webkit-appearance: none;
         width: 12px;
         height: 12px;
-        border-radius: #ff4081;
+        border-radius: 50%;
+        background-color: #ff4081;
         cursor: pointer;
-        margin-top: 4px;
+        margin-top: -4px;
       }
     }
 
