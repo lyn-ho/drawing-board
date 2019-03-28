@@ -23,6 +23,8 @@ module.exports = {
     extensions: ['.js', '.vue', '.css', '.less']
   },
 
+  devtool: 'source-map',
+
   devServer: {
     open: true,
     hot: true

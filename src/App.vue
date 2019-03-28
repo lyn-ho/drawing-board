@@ -33,6 +33,12 @@
 </template>
 
 <script>
+import DrawBoard from './drawboard'
+import UndoStack from './undostack'
+
+let drawboard
+let undoStack
+
 export default {
   data() {
     return {
@@ -45,7 +51,6 @@ export default {
 
       eraserEnable: false,
       painting: false,
-      radius: 5,
       activeColor: '#000000',
 
       activeBgColor: '#fff',
@@ -55,17 +60,22 @@ export default {
   },
 
   computed: {
-    strokeWidth() {
-      return 2 * this.halfWidth
-    },
-
     strokeOpacity() {
       return (11 - this.rawOpacity) / 10
     }
   },
 
   watch: {
-    
+    halfWidth(val) {
+      let radius = Math.max(this.halfWidth, 5)
+      drawboard && drawboard.setRadius(radius)
+      drawboard && drawboard.setStrokeWidth(val * 2)
+    },
+
+    rawOpacity(val) {
+      let opacity = (11 - this.rawOpacity) / 10
+      drawboard && drawboard.setStrokeOpacity(opacity)
+    }
   },
 
   methods: {
@@ -98,9 +108,9 @@ export default {
         context.globalCompositeOperation = 'destination-out'
         context.beginPath()
 
-        this.radius = Math.max(this.strokeWidth / 2, 5)
+        let radius = Math.max(this.halfWidth, 5)
         
-        context.arc(x1, y1, this.radius, 0, 2 * Math.PI)
+        context.arc(x1, y1, radius, 0, 2 * Math.PI)
         context.clip()
         context.clearRect(0, 0, canvas.width, canvas.height)
         context.restore()
@@ -119,78 +129,19 @@ export default {
       let y2 = e.clientY
 
       if(this.eraserEnable) {
-        this.doEraser(x1, y1, x2, y2)
+        drawboard && drawboard.eraser(x1, y1, x2, y2)
       } else {
-        this.drawLine(x1, y1, x2, y2)
+        drawboard && drawboard.drawLine(x1, y1, x2, y2)
       }
+
+      // undoStack.push()
 
       this.lastPoint = {x: x2, y: y2}
     },
 
     handleMouseUp() {
       this.painting = false
-    },
-
-    doEraser(x1, y1, x2, y2) {
-      let context = this.getCanvasContext()
-      if(!context) return
-
-      let canvas = this.getCanvas()
-
-      let asin = this.radius * Math.sin(Math.atan((y2 - y1) / (x2 - x1)))
-      let acos = this.radius * Math.cos(Math.atan((y2 - y1) / (x2 - x1)))
-
-      let x3 = x1 + asin
-      let y3 = y1 - acos
-
-      let x4 = x1 - asin
-      let y4 = y1 + acos
-
-      let x5 = x2 + asin
-      let y5 = y2 - acos
-
-      let x6 = x2 - asin
-      let y6 = y2 + acos
-
-      context.save()
-      context.beginPath()
-      context.globalCompositeOperation = 'destination-out'
-      this.radius = Math.max(this.strokeWidth / 2, 5)
-      context.arc(x2, y2, this.radius, 0, 2 * Math.PI)
-      context.clip()
-      context.clearRect(0, 0, canvas.width, canvas.height)
-      context.restore()
-
-      context.save()
-      context.beginPath()
-      context.globalCompositeOperation = 'destination-out'
-      context.moveTo(x3, y3)
-      context.lineTo(x5, y5)
-      context.lineTo(x6, y6)
-      context.lineTo(x4, y4)
-      context.closePath()
-      context.clip()
-      context.clearRect(0, 0, canvas.width, canvas.height)
-      context.restore()
-    },
-
-    drawLine(x1, y1, x2, y2) {
-      let context = this.getCanvasContext()
-      if(!context) return
-
-      context.beginPath()
-
-      context.lineWidth = this.strokeWidth
-      context.globalAlpha = this.strokeOpacity
-
-      context.lineCap = 'round'
-
-      context.lineJoin = 'round'
-
-      context.moveTo(x1, y1)
-      context.lineTo(x2, y2)
-      context.stroke()
-      context.closePath()
+      undoStack.push()
     },
 
     changePenColor(color) {
@@ -206,21 +157,7 @@ export default {
     },
 
     handleSave() {
-      const canvas = this.getCanvas()
-
-      if(canvas) {
-        const image = canvas.toDataURL('img/png').replace('image/png', 'image/octet-stream')
-        
-        const link = document.createElement('a')
-        document.body.appendChild(link)
-
-        link.href= image
-        link.download = `pic-${Date.now()}.png`
-        link.target = '_blank'
-        link.click()
-        
-        document.body.removeChild(link)
-      }
+      drawboard && drawboard.save()
     },
 
     activeBrush() {
@@ -234,16 +171,16 @@ export default {
     },
 
     handleClear() {
-      let canvas = this.getCanvas()
-      let context = this.getCanvasContext()
-      if(!context) return
-
-      context.clearRect(0, 0, canvas.width, canvas.height)
+      drawboard && drawboard.clear()
     },
 
-    handleUndo() {},
+    handleUndo() {
+      undoStack.undo()
+    },
 
-    handleRedo() {},
+    handleRedo() {
+      undoStack.redo()
+    },
 
     getCanvas() {
       return document.getElementById("canvas");
@@ -269,6 +206,14 @@ export default {
   },
 
   mounted() {
+    let canvas = document.getElementById('canvas')
+    if(!canvas) return
+    let ctx = canvas.getContext('2d')
+
+    drawboard = new DrawBoard(canvas, ctx)
+
+    undoStack = new UndoStack(this.getCanvas(), this.getCanvasContext())
+
     window.addEventListener("resize", this.setCanvasSize());
   },
 
