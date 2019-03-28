@@ -8,10 +8,6 @@ class DrawBoard {
     this.undoStack = new UndoStack(canvas, ctx)
   }
 
-  setRadius(radius) {
-    this.radius = radius
-  }
-
   setStrokeWidth(strokeWidth) {
     this.strokeWidth = strokeWidth
   }
@@ -33,6 +29,20 @@ class DrawBoard {
     this.ctx.putImageData(imgData, 0, 0)
   }
 
+  eraserStart(x, y) {
+    this.ctx.save()
+        
+    this.ctx.globalCompositeOperation = 'destination-out'
+    this.ctx.beginPath()
+
+    let radius = Math.max(this.strokeWidth / 2, 5)
+    
+    this.ctx.arc(x, y, radius, 0, 2 * Math.PI)
+    this.ctx.clip()
+    this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height)
+    this.ctx.restore()
+  }
+
   drawLine(x1, y1, x2, y2) {
     this.ctx.beginPath()
 
@@ -50,8 +60,10 @@ class DrawBoard {
   }
 
   eraser(x1, y1, x2, y2) {
-    let asin = this.radius * Math.sin(Math.atan((y2 - y1) / (x2 - x1)))
-    let acos = this.radius * Math.cos(Math.atan((y2 - y1) / (x2 - x1)))
+    let radius = Math.max(this.strokeWidth / 2, 5)
+
+    let asin = radius * Math.sin(Math.atan((y2 - y1) / (x2 - x1)))
+    let acos = radius * Math.cos(Math.atan((y2 - y1) / (x2 - x1)))
 
     let x3 = x1 + asin
     let y3 = y1 - acos
@@ -68,8 +80,8 @@ class DrawBoard {
     this.ctx.save()
     this.ctx.beginPath()
     this.ctx.globalCompositeOperation = 'destination-out'
-    this.radius = Math.max(this.strokeWidth / 2, 5)
-    this.ctx.arc(x2, y2, this.radius, 0, 2 * Math.PI)
+    radius = Math.max(this.strokeWidth / 2, 5)
+    this.ctx.arc(x2, y2, radius, 0, 2 * Math.PI)
     this.ctx.clip()
     this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height)
     this.ctx.restore()

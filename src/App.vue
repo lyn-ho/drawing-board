@@ -68,7 +68,6 @@ export default {
   watch: {
     halfWidth(val) {
       let radius = Math.max(this.halfWidth, 5)
-      drawboard && drawboard.setRadius(radius)
       drawboard && drawboard.setStrokeWidth(val * 2)
     },
 
@@ -79,53 +78,45 @@ export default {
   },
 
   methods: {
-    handleTouchStart() {
-
+    handleTouchStart(e) {
+      this.start(e.touches[0].clientX, e.touches[0].clientY)
     },
 
-    handleTouchMove() {
-
+    handleTouchMove(e) {
+      this.move(e.touches[0].clientX, e.touches[0].clientY)
     },
 
     handleTouchEnd() {
-
+      this.end()
     },
 
     handleMouseDown(e) {
-      let context = this.getCanvasContext()
-
-      if(!context) return
-
-      let canvas = this.getCanvas()
-      this.painting = true
-      let x1 = e.clientX
-      let y1 = e.clientY
-
-      if(this.eraserEnable) {
-        context.save()
-        
-        context.globalCompositeOperation = 'destination-out'
-        context.beginPath()
-
-        let radius = Math.max(this.halfWidth, 5)
-        
-        context.arc(x1, y1, radius, 0, 2 * Math.PI)
-        context.clip()
-        context.clearRect(0, 0, canvas.width, canvas.height)
-        context.restore()
-      }
-
-      this.lastPoint = {x: x1, y: y1}
+      this.start(e.clientX, e.clientY)
     },
 
-
     handleMouseMove(e) {
+      this.move(e.clientX, e.clientY)
+    },
+
+    handleMouseUp() {
+      this.end()
+    },
+
+    start(x, y) {
+      this.painting = true
+
+      if(this.eraserEnable) {
+        drawboard && drawboard.eraserStart(x, y)
+      }
+
+      this.lastPoint = {x, y}
+    },
+
+    move(x2, y2) {
       if(!this.painting) return
 
       let x1 = this.lastPoint.x
       let y1 = this.lastPoint.y
-      let x2 = e.clientX
-      let y2 = e.clientY
 
       if(this.eraserEnable) {
         drawboard && drawboard.eraser(x1, y1, x2, y2)
@@ -137,7 +128,7 @@ export default {
       this.lastPoint = {x: x2, y: y2}
     },
 
-    handleMouseUp() {
+    end() {
       this.painting = false
       drawboard && drawboard.push()
     },
@@ -216,6 +207,15 @@ export default {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
+}
+
+@media screen and (max-width: 768px) {
+  .tools{
+    bottom: 15px;
+  }
+  .pen-detail{
+    bottom: 80px;
+  }
 }
 
 *::before {
