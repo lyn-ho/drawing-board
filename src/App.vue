@@ -34,10 +34,8 @@
 
 <script>
 import DrawBoard from './drawboard'
-import UndoStack from './undostack'
 
 let drawboard
-let undoStack
 
 export default {
   data() {
@@ -98,7 +96,6 @@ export default {
 
       let canvas = this.getCanvas()
       this.painting = true
-
       let x1 = e.clientX
       let y1 = e.clientY
 
@@ -134,14 +131,13 @@ export default {
         drawboard && drawboard.drawLine(x1, y1, x2, y2)
       }
 
-      // undoStack.push()
 
       this.lastPoint = {x: x2, y: y2}
     },
 
     handleMouseUp() {
       this.painting = false
-      undoStack.push()
+      drawboard && drawboard.push()
     },
 
     changePenColor(color) {
@@ -175,11 +171,11 @@ export default {
     },
 
     handleUndo() {
-      undoStack.undo()
+      drawboard && drawboard.undo()
     },
 
     handleRedo() {
-      undoStack.redo()
+      drawboard && drawboard.redo()
     },
 
     getCanvas() {
@@ -210,9 +206,7 @@ export default {
     if(!canvas) return
     let ctx = canvas.getContext('2d')
 
-    drawboard = new DrawBoard(canvas, ctx)
-
-    undoStack = new UndoStack(this.getCanvas(), this.getCanvasContext())
+    drawboard = new DrawBoard(canvas, ctx, canvas.toDataURL())
 
     window.addEventListener("resize", this.setCanvasSize());
   },

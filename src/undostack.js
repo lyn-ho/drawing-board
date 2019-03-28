@@ -1,35 +1,32 @@
 class UndoStack {
 
-  constructor(canvas, context) {
-    this.canvas = canvas
-    this.context = context
-
+  constructor() {
     this.undoStack = []
     this.redoStack = []
   }
 
-  push() {
-    if(!canvas) return
+  push(canvas) {
     this.undoStack.push(canvas.toDataURL())
     this.redoStack = []
   }
 
-  undo() {
-    if(this.context && this.undoStack.length) {
-      let dataUrl = this.undoStack.pop()
-      this.redoStack.push(dataUrl)
+  undo(canvas, ctx, initData) {
+    if(this.undoStack.length) {
+      this.redoStack.push(this.undoStack.pop())
+      let dataUrl = this.undoStack.length ? this.undoStack[this.undoStack.length - 1] : initData
 
       let pic = new Image()
-      pic.src = dataUrl
-
+      
       pic.onload = () => {
-        this.context.drawImage(pic, 0, 0)
+        ctx.clearRect(0, 0, canvas.width, canvas.height)
+        ctx.drawImage(pic, 0, 0)
       }
+      pic.src = dataUrl
     }
   }
 
-  redo() {
-    if(this.context && this.redoStack.length) {
+  redo(canvas, ctx) {
+    if(this.redoStack.length) {
       let dataUrl = this.redoStack.pop()
       this.undoStack.push(dataUrl)
 
@@ -37,7 +34,8 @@ class UndoStack {
       pic.src = dataUrl
 
       pic.onload = () => {
-        this.context.drawImage(pic, 0, 0)
+        ctx.clearRect(0, 0, canvas.width, canvas.height)
+        ctx.drawImage(pic, 0, 0)
       }
     }
   }

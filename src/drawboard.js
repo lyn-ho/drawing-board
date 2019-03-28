@@ -1,7 +1,11 @@
+import UndoStack from './undostack'
 class DrawBoard {
-  constructor(canvas, ctx) {
+  constructor(canvas, ctx, initData) {
     this.canvas = canvas
     this.ctx = ctx
+    this.initData = initData
+
+    this.undoStack = new UndoStack(canvas, ctx)
   }
 
   setRadius(radius) {
@@ -72,6 +76,7 @@ class DrawBoard {
 
   clear() {
     this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height)
+    this.push()
   }
 
   save() {
@@ -88,6 +93,18 @@ class DrawBoard {
     link.click()
 
     document.body.removeChild(link)
+  }
+
+  push() {
+    this.undoStack.push(this.canvas)
+  }
+
+  undo() {
+    this.undoStack.undo(this.canvas, this.ctx, this.initData)
+  }
+
+  redo() {
+    this.undoStack.redo(this.canvas, this.ctx)
   }
 }
 
