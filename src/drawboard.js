@@ -20,6 +20,19 @@ class DrawBoard {
     this.strokeOpacity = strokeOpacity
   }
 
+  setSize(width, height) {
+    let imgData = this.ctx.getImageData(
+      0,
+      0,
+      this.canvas.width,
+      this.canvas.height
+    )
+
+    this.canvas.width = width
+    this.canvas.height = height
+    this.ctx.putImageData(imgData, 0, 0)
+  }
+
   drawLine(x1, y1, x2, y2) {
     this.ctx.beginPath()
 

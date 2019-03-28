@@ -33,6 +33,8 @@
 </template>
 
 <script>
+import _ from 'lodash'
+
 import DrawBoard from './drawboard'
 
 let drawboard
@@ -179,26 +181,13 @@ export default {
     },
 
     getCanvas() {
-      return document.getElementById("canvas");
+      return document.getElementById("canvas")
     },
 
     getCanvasContext() {
-      return this.getCanvas() && this.getCanvas().getContext("2d");
+      return this.getCanvas() && this.getCanvas().getContext("2d")
     },
 
-    setCanvasSize() {
-      let canvas = this.getCanvas();
-      let context = this.getCanvasContext();
-      if (!context) return;
-
-      let imgData = context.getImageData(0, 0, canvas.width, canvas.height);
-      let pageWidth = document.documentElement.clientWidth;
-      let pageHeight = document.documentElement.clientHeight;
-
-      canvas.width = pageWidth;
-      canvas.height = pageHeight;
-      context.putImageData(imgData, 0, 0);
-    }
   },
 
   mounted() {
@@ -208,13 +197,18 @@ export default {
 
     drawboard = new DrawBoard(canvas, ctx, canvas.toDataURL())
 
-    window.addEventListener("resize", this.setCanvasSize());
+
+
+    drawboard.setSize(document.documentElement.clientWidth, document.documentElement.clientHeight)
+    window.addEventListener("resize", _.debounce(() => {
+      drawboard.setSize(document.documentElement.clientWidth, document.documentElement.clientHeight)
+    }, 1000))
   },
 
   beforeDestroy() {
-    window.removeEventListener("resize");
+    window.removeEventListener("resize")
   }
-};
+}
 </script>
 
 <style lang="less">
